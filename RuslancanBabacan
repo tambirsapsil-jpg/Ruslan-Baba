@@ -1,0 +1,45 @@
+-- Objenin kendisini tanımlıyoruz
+local paraMakinesi = script.Parent
+
+-- Ayarlar
+local beklemeSuresi = 3 -- Oyuncu kaç saniyede bir para alabilsin?
+local verilecekMiktar = 100 -- Her dokunuşta verilecek para miktarı
+local paraBirimiIsmi = "Para" -- Oyununuzdaki para biriminin adı (Cash, Money, Para vb.)
+
+-- Cooldown (Bekleme süresi) kontrolü için tablo
+local beklemedekiler = {}
+
+paraMakinesi.Touched:Connect(function(hit)
+	-- Dokunan şeyin bir oyuncu karakteri olup olmadığını kontrol et
+	local character = hit.Parent
+	local player = game.Players:GetPlayerFromCharacter(character)
+	
+	if player then
+		-- Oyuncu bekleme süresinde değilse işlemi başlat
+		if not beklemedekiler[player.UserId] then
+			beklemedekiler[player.UserId] = true -- Oyuncuyu bekleme listesine al
+			
+			-- Oyuncunun verilerinin tutulduğu "leaderstats" klasörünü bul
+			local leaderstats = player:FindFirstChild("leaderstats")
+			
+			if leaderstats then
+				local oyuncuParasi = leaderstats:FindFirstChild(paraBirimiIsmi)
+				
+				if oyuncuParasi then
+					-- Parayı oyuncunun hesabına ekle
+					oyuncuParasi.Value = oyuncuParasi.Value + verilecekMiktar
+					
+					-- İsteğe bağlı: Objenin rengini değiştirerek tepki vermesini sağlayabilirsiniz
+					local eskiRenk = paraMakinesi.BrickColor
+					paraMakinesi.BrickColor = BrickColor.new("Bright green")
+					task.wait(0.2)
+					paraMakinesi.BrickColor = eskiRenk
+				end
+			end
+			
+			-- Belirlenen süre kadar bekle ve oyuncuyu bekleme listesinden çıkar
+			task.wait(beklemeSuresi)
+			beklemedekiler[player.UserId] = nil
+		end
+	end
+end)
